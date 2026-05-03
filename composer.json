@@ -1,0 +1,72 @@
+{
+    "name": "authn-sh/sdk-php-laravel",
+    "description": "Laravel package for authn.sh — service provider, middleware, Blade directives, facade. Wraps authn-sh/sdk-php for Laravel 11+.",
+    "keywords": [
+        "authn",
+        "authentication",
+        "identity",
+        "laravel",
+        "sdk"
+    ],
+    "license": "AGPL-3.0-only",
+    "type": "library",
+    "homepage": "https://authn.sh",
+    "support": {
+        "issues": "https://github.com/authn-sh/sdk-php-laravel/issues",
+        "source": "https://github.com/authn-sh/sdk-php-laravel"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "authn-sh/sdk-php": "^0.1",
+        "illuminate/cache": "^11.0 || ^12.0",
+        "illuminate/contracts": "^11.0 || ^12.0",
+        "illuminate/support": "^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.10",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.0 || ^10.0",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Authn\\Sdk\\Laravel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Authn\\Sdk\\Laravel\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "phpstan": "vendor/bin/phpstan analyse --no-progress",
+        "pint": "vendor/bin/pint --test",
+        "pint:fix": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Authn\\Sdk\\Laravel\\AuthnServiceProvider"
+            ],
+            "aliases": {
+                "Authn": "Authn\\Sdk\\Laravel\\Facades\\Authn"
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
