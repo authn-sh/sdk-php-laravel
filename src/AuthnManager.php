@@ -16,15 +16,23 @@ use Authn\Sdk\Resources\WebhookEndpointsManager;
 use Authn\Sdk\Tokens\TokenVerifier;
 use Authn\Sdk\Tokens\VerifiedClaims;
 use Authn\Sdk\Webhooks\SignatureVerifier;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 
 /**
  * Single entry point used by the `Authn` facade. Lazily resolves the underlying
  * SDK objects from the container so they're not all built unless you call them.
+ *
+ * Also stores the optional `User` resolver: a closure that maps a verified set
+ * of claims onto an `Authenticatable` so `Auth::user()` returns the customer's
+ * own model after AuthenticateWithAuthn runs.
  */
 class AuthnManager
 {
+    /** @var (callable(VerifiedClaims): ?Authenticatable)|null */
+    private $userResolver = null;
+
     public function __construct(private readonly Container $container) {}
 
     public function client(): Client
@@ -70,6 +78,27 @@ class AuthnManager
         $claims = $request->attributes->get('authn.claims');
 
         return $claims instanceof VerifiedClaims ? $claims : null;
+    }
+
+    /**
+     * Register a callable that maps verified claims to an `Authenticatable`.
+     *
+     * The resolver runs inside the AuthenticateWithAuthn middleware. Pass `null`
+     * to clear a previously-registered resolver.
+     *
+     * @param  (callable(VerifiedClaims): ?Authenticatable)|null  $resolver
+     */
+    public function resolveUserUsing(?callable $resolver): void
+    {
+        $this->userResolver = $resolver;
+    }
+
+    /**
+     * @return (callable(VerifiedClaims): ?Authenticatable)|null
+     */
+    public function getUserResolver(): ?callable
+    {
+        return $this->userResolver;
     }
 
     public function users(): UsersManager

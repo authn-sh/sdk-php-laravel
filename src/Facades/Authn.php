@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Authn\Sdk\Resources\RedirectUrlsManager redirectUrls()
  * @method static \Authn\Sdk\Resources\InstanceManager instance()
  * @method static \Authn\Sdk\Resources\WebhookEndpointsManager webhookEndpoints()
+ * @method static void resolveUserUsing(?callable $resolver)
  *
  * @see AuthnManager
  */

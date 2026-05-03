@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Authn\Sdk\Laravel;
 
 use Authn\Sdk\Client;
+use Authn\Sdk\Laravel\Http\Middleware\AuthenticateWithAuthn;
 use Authn\Sdk\Tokens\TokenVerifier;
+use Authn\Sdk\Tokens\VerifiedClaims;
 use Authn\Sdk\Webhooks\SignatureVerifier;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
@@ -39,6 +44,42 @@ class AuthnServiceProvider extends ServiceProvider
                 $this->configPath() => $this->app->configPath('authn.php'),
             ], 'authn-config');
         }
+
+        $this->registerMiddleware();
+        $this->registerBladeDirectives();
+    }
+
+    private function registerMiddleware(): void
+    {
+        /** @var Router $router */
+        $router = $this->app->make('router');
+        $router->aliasMiddleware('authn', AuthenticateWithAuthn::class);
+    }
+
+    private function registerBladeDirectives(): void
+    {
+        Blade::if('authnSignedIn', fn (): bool => self::currentClaims() !== null);
+        Blade::if('authnSignedOut', fn (): bool => self::currentClaims() === null);
+
+        // v0.1 stub: organization roles + permissions land in v0.2.
+        Blade::if('authnHas', fn (string $check): bool => false);
+    }
+
+    private static function currentClaims(): ?VerifiedClaims
+    {
+        $app = \Illuminate\Container\Container::getInstance();
+        if (! $app->bound('request')) {
+            return null;
+        }
+
+        $request = $app->make('request');
+        if (! $request instanceof Request) {
+            return null;
+        }
+
+        $claims = $request->attributes->get(AuthenticateWithAuthn::REQUEST_ATTRIBUTE);
+
+        return $claims instanceof VerifiedClaims ? $claims : null;
     }
 
     private function configPath(): string

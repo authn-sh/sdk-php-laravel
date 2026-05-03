@@ -27,6 +27,7 @@
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.10",
         "mockery/mockery": "^1.6",
+        "nyholm/psr7": "^1.8",
         "orchestra/testbench": "^9.0 || ^10.0",
         "pestphp/pest": "^3.0",
         "phpstan/phpstan": "^2.1"
