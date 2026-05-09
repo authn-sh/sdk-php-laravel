@@ -18,7 +18,7 @@
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "authn-sh/sdk-php": "^0.1",
+        "authn-sh/sdk-php": "^0.1@dev || ^0.2@dev",
         "illuminate/cache": "^11.0 || ^12.0",
         "illuminate/contracts": "^11.0 || ^12.0",
         "illuminate/support": "^11.0 || ^12.0"
@@ -65,9 +65,18 @@
             }
         },
         "branch-alias": {
-            "dev-main": "0.1.x-dev"
+            "dev-main": "0.2.x-dev"
         }
     },
-    "minimum-stability": "stable",
-    "prefer-stable": true
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {
+        "sdk-php": {
+            "type": "path",
+            "url": "../sdk-php",
+            "options": {
+                "symlink": false
+            }
+        }
+    }
 }

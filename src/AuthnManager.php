@@ -101,6 +101,16 @@ class AuthnManager
         return $this->userResolver;
     }
 
+    public function hasRole(string $key): bool
+    {
+        return $this->auth()?->hasRole($key) ?? false;
+    }
+
+    public function hasPermission(string $key): bool
+    {
+        return $this->auth()?->hasPermission($key) ?? false;
+    }
+
     public function users(): UsersManager
     {
         return $this->client()->users();
