@@ -18,7 +18,7 @@
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "authn-sh/sdk-php": "^0.1@dev || ^0.2@dev",
+        "authn-sh/sdk-php": "dev-main || ^0.2",
         "illuminate/cache": "^11.0 || ^12.0",
         "illuminate/contracts": "^11.0 || ^12.0",
         "illuminate/support": "^11.0 || ^12.0"
@@ -72,11 +72,8 @@
     "prefer-stable": true,
     "repositories": {
         "sdk-php": {
-            "type": "path",
-            "url": "../sdk-php",
-            "options": {
-                "symlink": false
-            }
+            "type": "vcs",
+            "url": "https://github.com/authn-sh/sdk-php"
         }
     }
 }
