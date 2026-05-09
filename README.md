@@ -2,8 +2,6 @@
 
 Laravel package for [authn.sh](https://authn.sh) — auto-discovered service provider, container bindings, middleware, Blade directives, and an `Authn` facade. Wraps [`authn-sh/sdk-php`](https://github.com/authn-sh/sdk-php) for Laravel 11+.
 
-> Status: **0.1.x pre-release.** Bindings, middleware, and Blade directives land in SPL-2 / SPL-3. This release is a bootstrap-only skeleton.
-
 ## Requirements
 
 - PHP **8.2+**
@@ -16,13 +14,63 @@ Laravel package for [authn.sh](https://authn.sh) — auto-discovered service pro
 composer require authn-sh/sdk-php-laravel
 ```
 
-The service provider auto-discovers. Once SPL-2 lands you'll be able to publish the config:
+The service provider auto-discovers. Publish the config:
 
 ```bash
 php artisan vendor:publish --tag=authn-config
 ```
 
-…and resolve the SDK from the container or via the `Authn` facade.
+## Middleware
+
+Register `authn` on routes that require a valid session JWT:
+
+```php
+Route::middleware('authn')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
+});
+```
+
+## Blade directives
+
+### `@authnSignedIn` / `@authnSignedOut`
+
+```blade
+@authnSignedIn
+    <p>Welcome back, {{ Authn::auth()->sub }}</p>
+@endauthnSignedIn
+
+@authnSignedOut
+    <a href="/login">Sign in</a>
+@endauthnSignedOut
+```
+
+### `@authnHas`
+
+Evaluates organization roles and permissions from the active session JWT:
+
+```blade
+@authnHas('role:org:admin')
+    <a href="/admin">Admin panel</a>
+@else
+    <p>You do not have admin access.</p>
+@endauthnHas
+
+@authnHas('permission:org:billing:manage')
+    <a href="/billing">Billing</a>
+@endauthnHas
+```
+
+The argument must be prefixed with `role:` or `permission:`. Any other prefix raises an `InvalidArgumentException` at render time so typos fail loudly.
+
+## Facade methods
+
+```php
+use Authn\Sdk\Laravel\Facades\Authn;
+
+$claims = Authn::auth();          // ?VerifiedClaims — null outside an authn-authenticated request
+Authn::hasRole('org:admin');      // bool
+Authn::hasPermission('org:foo:bar'); // bool
+```
 
 ## Development
 

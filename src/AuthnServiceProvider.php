@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
 
@@ -61,8 +62,19 @@ class AuthnServiceProvider extends ServiceProvider
         Blade::if('authnSignedIn', fn (): bool => self::currentClaims() !== null);
         Blade::if('authnSignedOut', fn (): bool => self::currentClaims() === null);
 
-        // v0.1 stub: organization roles + permissions land in v0.2.
-        Blade::if('authnHas', fn (string $check): bool => false);
+        Blade::if('authnHas', function (string $check): bool {
+            if (str_starts_with($check, 'role:')) {
+                return self::currentClaims()?->hasRole(substr($check, 5)) ?? false;
+            }
+
+            if (str_starts_with($check, 'permission:')) {
+                return self::currentClaims()?->hasPermission(substr($check, 11)) ?? false;
+            }
+
+            throw new InvalidArgumentException(
+                "authnHas: unrecognised check \"{$check}\" — prefix with \"role:\" or \"permission:\".",
+            );
+        });
     }
 
     private static function currentClaims(): ?VerifiedClaims
