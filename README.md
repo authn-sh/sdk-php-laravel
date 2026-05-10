@@ -62,6 +62,25 @@ Evaluates organization roles and permissions from the active session JWT:
 
 The argument must be prefixed with `role:` or `permission:`. Any other prefix raises an `InvalidArgumentException` at render time so typos fail loudly.
 
+### `@authnHasConnectedAccount`
+
+Renders the inner block when the active session JWT advertises an `ExternalAccount` linked to the named OAuth provider:
+
+```blade
+@authnHasConnectedAccount('google')
+    <p>Connected to Google.</p>
+@else
+    <a href="/sign-in/sso-callback?provider=google">Connect Google</a>
+@endauthnHasConnectedAccount
+```
+
+The matching route middleware `authn.connected:<provider_key>` fail-closes by redirecting to `authn.connected_accounts.redirect_url` (the `{provider}` placeholder is substituted with the route argument):
+
+```php
+Route::get('/integrations/google', [GoogleController::class, 'show'])
+    ->middleware(['authn', 'authn.connected:google']);
+```
+
 ## Facade methods
 
 ```php

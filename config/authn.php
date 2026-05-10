@@ -104,4 +104,20 @@ return [
         'redirect_url' => env('AUTHN_MFA_REDIRECT_URL', '/sign-in/factor-two'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Connected accounts
+    |--------------------------------------------------------------------------
+    |
+    | `redirect_url` is where `RequiresConnectedAccount` sends a user that is
+    | signed in but missing the required `ExternalAccount` link. The
+    | `{provider}` placeholder is replaced with the route's `provider_key`
+    | parameter (e.g. `google`, `github`).
+    |
+    */
+
+    'connected_accounts' => [
+        'redirect_url' => env('AUTHN_CONNECTED_REDIRECT_URL', '/sign-in/sso-callback?provider={provider}'),
+    ],
+
 ];
