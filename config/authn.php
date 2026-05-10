@@ -73,4 +73,35 @@ return [
 
     'allowed_clock_skew' => (int) env('AUTHN_ALLOWED_CLOCK_SKEW', 5),
 
+    /*
+    |--------------------------------------------------------------------------
+    | URL helpers
+    |--------------------------------------------------------------------------
+    |
+    | Used by middleware to redirect unauthenticated or under-authenticated
+    | requests to the appropriate sign-in page.
+    |
+    */
+
+    'url' => [
+        'sign_in' => env('AUTHN_URL_SIGN_IN', '/sign-in'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | MFA enforcement
+    |--------------------------------------------------------------------------
+    |
+    | `max_age_seconds` is the maximum age of the second-factor proof accepted
+    | by the RequiresMfa middleware (default 30 minutes). `redirect_url` is
+    | where the middleware sends users who have not recently proved a second
+    | factor.
+    |
+    */
+
+    'mfa' => [
+        'max_age_seconds' => (int) env('AUTHN_MFA_MAX_AGE_SECONDS', 1800),
+        'redirect_url' => env('AUTHN_MFA_REDIRECT_URL', '/sign-in/factor-two'),
+    ],
+
 ];
