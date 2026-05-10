@@ -37,6 +37,14 @@ NO_PERMISSION
 @endauthnHas
 BLADE;
 
+    private const MFA_TEMPLATE = <<<'BLADE'
+@authnRequiresMfa
+MFA_VERIFIED
+@else
+MFA_NOT_VERIFIED
+@endauthnRequiresMfa
+BLADE;
+
     private AuthnTestEnvironment $env;
 
     protected function setUp(): void
@@ -62,6 +70,13 @@ BLADE;
         );
 
         Route::get('/render-anonymous', fn () => Blade::render(self::SIGNED_IN_OUT_TEMPLATE));
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-mfa',
+            fn () => Blade::render(self::MFA_TEMPLATE),
+        );
+
+        Route::get('/render-mfa-anonymous', fn () => Blade::render(self::MFA_TEMPLATE));
     }
 
     public function test_renders_the_signed_in_branch_when_middleware_has_populated_claims(): void
@@ -146,5 +161,43 @@ BLADE;
         $this->expectExceptionMessageMatches('/unrecognised check/');
 
         $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-garbage');
+    }
+
+    public function test_authn_requires_mfa_renders_truthy_branch_when_second_factor_is_verified(): void
+    {
+        $jwt = $this->env->signJwt(['fva' => [60, 120]]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa')->getContent();
+
+        $this->assertStringContainsString('MFA_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_NOT_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_renders_else_branch_when_second_factor_is_not_verified(): void
+    {
+        $jwt = $this->env->signJwt(['fva' => [60, -1]]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_renders_else_branch_when_fva_claim_is_absent(): void
+    {
+        $jwt = $this->env->signJwt();
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_renders_else_branch_on_anonymous_request(): void
+    {
+        $body = $this->get('/render-mfa-anonymous')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
     }
 }
