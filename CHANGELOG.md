@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `@authnHasConnectedAccount('<provider_key>')` Blade directive. Renders the inner block when the active session JWT advertises an `ExternalAccount` linked to that provider.
+- `Authn\Sdk\Laravel\Http\Middleware\RequiresConnectedAccount` route middleware. Aliased as `authn.connected:<provider_key>`. Redirects to `authn.connected_accounts.redirect_url` (default `/sign-in/sso-callback?provider={provider}`) when the linked account is missing, and to `authn.url.sign_in` for unauthenticated requests.
+- `Authn\Sdk\Laravel\Support\ConnectedAccounts` helper exposing `providerKeys(VerifiedClaims)` and `has(VerifiedClaims, $providerKey)`. Reads `external_accounts[]` / `eac[]` from the JWT raw claim bag — both compact (`{p: "google"}` or string) and expanded (`{provider: "google", external_id: …}`) shapes are accepted.
+- `authn.connected_accounts.redirect_url` config key (env: `AUTHN_CONNECTED_REDIRECT_URL`, default `/sign-in/sso-callback?provider={provider}`).
+
+### Changed
+
+- Composer constraint on `authn-sh/sdk-php` bumped to `dev-main || ^0.4` with a VCS repository entry while v0.4 sits on alpha. Will be tightened to `^0.4` once `sdk-php@v0.4.0` is published.
+
 ## [0.3.0] — 2026-05-10
 
 ### Added

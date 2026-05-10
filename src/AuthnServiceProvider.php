@@ -6,7 +6,9 @@ namespace Authn\Sdk\Laravel;
 
 use Authn\Sdk\Client;
 use Authn\Sdk\Laravel\Http\Middleware\AuthenticateWithAuthn;
+use Authn\Sdk\Laravel\Http\Middleware\RequiresConnectedAccount;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresMfa;
+use Authn\Sdk\Laravel\Support\ConnectedAccounts;
 use Authn\Sdk\Tokens\TokenVerifier;
 use Authn\Sdk\Tokens\VerifiedClaims;
 use Authn\Sdk\Webhooks\SignatureVerifier;
@@ -57,6 +59,7 @@ class AuthnServiceProvider extends ServiceProvider
         $router = $this->app->make('router');
         $router->aliasMiddleware('authn', AuthenticateWithAuthn::class);
         $router->aliasMiddleware('authn.requires_mfa', RequiresMfa::class);
+        $router->aliasMiddleware('authn.connected', RequiresConnectedAccount::class);
     }
 
     private function registerBladeDirectives(): void
@@ -65,6 +68,11 @@ class AuthnServiceProvider extends ServiceProvider
         Blade::if('authnSignedOut', fn (): bool => self::currentClaims() === null);
 
         Blade::if('authnRequiresMfa', fn (): bool => self::currentClaims()?->twoFactorVerified === true);
+
+        Blade::if(
+            'authnHasConnectedAccount',
+            fn (string $providerKey): bool => ConnectedAccounts::has(self::currentClaims(), $providerKey),
+        );
 
         Blade::if('authnHas', function (string $check): bool {
             if (str_starts_with($check, 'role:')) {

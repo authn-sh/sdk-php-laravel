@@ -45,6 +45,14 @@ MFA_NOT_VERIFIED
 @endauthnRequiresMfa
 BLADE;
 
+    private const CONNECTED_TEMPLATE = <<<'BLADE'
+@authnHasConnectedAccount('google')
+HAS_GOOGLE
+@else
+NO_GOOGLE
+@endauthnHasConnectedAccount
+BLADE;
+
     private AuthnTestEnvironment $env;
 
     protected function setUp(): void
@@ -77,6 +85,13 @@ BLADE;
         );
 
         Route::get('/render-mfa-anonymous', fn () => Blade::render(self::MFA_TEMPLATE));
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-connected',
+            fn () => Blade::render(self::CONNECTED_TEMPLATE),
+        );
+
+        Route::get('/render-connected-anonymous', fn () => Blade::render(self::CONNECTED_TEMPLATE));
     }
 
     public function test_renders_the_signed_in_branch_when_middleware_has_populated_claims(): void
@@ -199,5 +214,51 @@ BLADE;
 
         $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
         $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_has_connected_account_renders_truthy_branch_when_provider_is_linked(): void
+    {
+        $jwt = $this->env->signJwt([
+            'external_accounts' => [
+                ['provider' => 'google'],
+            ],
+        ]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-connected')->getContent();
+
+        $this->assertStringContainsString('HAS_GOOGLE', (string) $body);
+        $this->assertStringNotContainsString('NO_GOOGLE', (string) $body);
+    }
+
+    public function test_authn_has_connected_account_renders_else_branch_when_provider_is_not_linked(): void
+    {
+        $jwt = $this->env->signJwt([
+            'external_accounts' => [
+                ['provider' => 'github'],
+            ],
+        ]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-connected')->getContent();
+
+        $this->assertStringContainsString('NO_GOOGLE', (string) $body);
+        $this->assertStringNotContainsString('HAS_GOOGLE', (string) $body);
+    }
+
+    public function test_authn_has_connected_account_renders_else_branch_when_claim_is_absent(): void
+    {
+        $jwt = $this->env->signJwt();
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-connected')->getContent();
+
+        $this->assertStringContainsString('NO_GOOGLE', (string) $body);
+        $this->assertStringNotContainsString('HAS_GOOGLE', (string) $body);
+    }
+
+    public function test_authn_has_connected_account_renders_else_branch_on_anonymous_request(): void
+    {
+        $body = $this->get('/render-connected-anonymous')->getContent();
+
+        $this->assertStringContainsString('NO_GOOGLE', (string) $body);
+        $this->assertStringNotContainsString('HAS_GOOGLE', (string) $body);
     }
 }
