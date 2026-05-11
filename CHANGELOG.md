@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `@authnHasPasskey[(<mode>)]` Blade directive. Renders the inner block based on the active session's passkey signal. Two modes: `verified` (default — matches when the current session was authenticated by a passkey first-factor) and `enrolled` (matches whenever the user has at least one verified passkey on file).
+- `Authn\Sdk\Laravel\Http\Middleware\RequiresPasskey` route middleware. Aliased as `authn.requires_passkey[:<mode>]`. Fail-closes by redirecting to `authn.url.sign_in` for unauthenticated requests and to `authn.passkey.enroll_url` for authenticated requests lacking the required passkey signal.
+- `Authn\Sdk\Laravel\Support\Passkeys` helper exposing `matches(?VerifiedClaims, string $mode): bool` and the `MODE_VERIFIED` / `MODE_ENROLLED` constants.
+- `Authn::hasPasskey(?string $mode = null)` facade helper. Honours the configured default strict mode when no argument is supplied.
+- `authn.passkey.enroll_url` config key (env: `AUTHN_PASSKEY_ENROLL_URL`, default `/user/security/passkeys`).
+- `authn.passkey.default_strict_mode` config key (env: `AUTHN_PASSKEY_DEFAULT_STRICT_MODE`, default `verified`).
+
 ## [0.4.0] — 2026-05-11
 
 ### Added

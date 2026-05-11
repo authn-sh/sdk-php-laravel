@@ -81,14 +81,52 @@ Route::get('/integrations/google', [GoogleController::class, 'show'])
     ->middleware(['authn', 'authn.connected:google']);
 ```
 
+### `@authnHasPasskey`
+
+Renders the inner block based on the active session's passkey signal. Two modes:
+
+- `verified` (default) — matches when the current session was authenticated by a passkey first-factor (`VerifiedClaims::wasVerifiedByPasskey()`).
+- `enrolled` — matches whenever the user has at least one verified passkey on file (`VerifiedClaims::hasPasskey()`).
+
+```blade
+@authnHasPasskey
+    <a href="/account/api-keys">Manage API keys</a>
+@else
+    <p>This area requires a passkey sign-in.</p>
+@endauthnHasPasskey
+
+@authnHasPasskey('enrolled')
+    <p>You already have a passkey on file.</p>
+@else
+    <a href="/user/security/passkeys">Add your first passkey</a>
+@endauthnHasPasskey
+```
+
+The matching route middleware `authn.requires_passkey[:<mode>]` fail-closes by redirecting unauthenticated requests to `authn.url.sign_in` and signed-in-but-under-authenticated requests to `authn.passkey.enroll_url`:
+
+```php
+Route::get('/account/security', [SecurityController::class, 'show'])
+    ->middleware(['authn', 'authn.requires_passkey']);            // verified (default)
+
+Route::get('/account/api-keys', [ApiKeyController::class, 'index'])
+    ->middleware(['authn', 'authn.requires_passkey:verified']);
+
+Route::get('/account/passkey-required-area', [Controller::class, 'show'])
+    ->middleware(['authn', 'authn.requires_passkey:enrolled']);
+```
+
+The default mode is configurable via `authn.passkey.default_strict_mode` (env `AUTHN_PASSKEY_DEFAULT_STRICT_MODE`).
+
 ## Facade methods
 
 ```php
 use Authn\Sdk\Laravel\Facades\Authn;
 
-$claims = Authn::auth();          // ?VerifiedClaims — null outside an authn-authenticated request
-Authn::hasRole('org:admin');      // bool
-Authn::hasPermission('org:foo:bar'); // bool
+$claims = Authn::auth();              // ?VerifiedClaims — null outside an authn-authenticated request
+Authn::hasRole('org:admin');          // bool
+Authn::hasPermission('org:foo:bar');  // bool
+Authn::hasPasskey();                  // bool — defaults to the configured strict mode ("verified")
+Authn::hasPasskey('enrolled');        // bool — true when the user has any verified passkey
 ```
 
 ## Development

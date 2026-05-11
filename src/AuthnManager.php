@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Authn\Sdk\Laravel;
 
 use Authn\Sdk\Client;
+use Authn\Sdk\Laravel\Support\Passkeys;
 use Authn\Sdk\Resources\AllowlistIdentifiersManager;
 use Authn\Sdk\Resources\BlocklistIdentifiersManager;
 use Authn\Sdk\Resources\InstanceManager;
@@ -109,6 +110,27 @@ class AuthnManager
     public function hasPermission(string $key): bool
     {
         return $this->auth()?->hasPermission($key) ?? false;
+    }
+
+    public function hasPasskey(?string $mode = null): bool
+    {
+        $resolved = $mode ?? $this->configuredPasskeyMode();
+
+        return Passkeys::matches($this->auth(), $resolved);
+    }
+
+    private function configuredPasskeyMode(): string
+    {
+        if (! $this->container->bound('config')) {
+            return Passkeys::MODE_VERIFIED;
+        }
+
+        $configured = $this->container->make('config')->get('authn.passkey.default_strict_mode');
+        if (is_string($configured) && in_array($configured, [Passkeys::MODE_VERIFIED, Passkeys::MODE_ENROLLED], true)) {
+            return $configured;
+        }
+
+        return Passkeys::MODE_VERIFIED;
     }
 
     public function users(): UsersManager

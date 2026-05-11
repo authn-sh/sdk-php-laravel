@@ -120,4 +120,26 @@ return [
         'redirect_url' => env('AUTHN_CONNECTED_REDIRECT_URL', '/sign-in/sso-callback?provider={provider}'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Passkey enforcement
+    |--------------------------------------------------------------------------
+    |
+    | `enroll_url` is where `RequiresPasskey` sends a signed-in user whose
+    | session lacks the required passkey signal. `default_strict_mode` picks
+    | which check the middleware (and the `@authnHasPasskey` Blade directive)
+    | apply when no per-call argument is supplied. Two modes:
+    |
+    |   - `verified` — only matches when the current session was actually
+    |     authenticated by a passkey first-factor (`VerifiedClaims->passkeyVerified`).
+    |   - `enrolled` — matches whenever the user has at least one verified
+    |     passkey on file (`VerifiedClaims->passkeyCount > 0`).
+    |
+    */
+
+    'passkey' => [
+        'enroll_url' => env('AUTHN_PASSKEY_ENROLL_URL', '/user/security/passkeys'),
+        'default_strict_mode' => env('AUTHN_PASSKEY_DEFAULT_STRICT_MODE', 'verified'),
+    ],
+
 ];
