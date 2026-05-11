@@ -15,16 +15,10 @@
         "issues": "https://github.com/authn-sh/sdk-php-laravel/issues",
         "source": "https://github.com/authn-sh/sdk-php-laravel"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/authn-sh/sdk-php"
-        }
-    ],
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "authn-sh/sdk-php": "dev-main || ^0.4",
+        "authn-sh/sdk-php": "^0.4",
         "illuminate/cache": "^11.0 || ^12.0",
         "illuminate/contracts": "^11.0 || ^12.0",
         "illuminate/support": "^11.0 || ^12.0"
@@ -71,9 +65,9 @@
             }
         },
         "branch-alias": {
-            "dev-main": "0.3.x-dev"
+            "dev-main": "0.4.x-dev"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

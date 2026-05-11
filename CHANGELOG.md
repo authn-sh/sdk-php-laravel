@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] — 2026-05-11
 
 ### Added
 
@@ -11,7 +11,7 @@
 
 ### Changed
 
-- Composer constraint on `authn-sh/sdk-php` bumped to `dev-main || ^0.4` with a VCS repository entry while v0.4 sits on alpha. Will be tightened to `^0.4` once `sdk-php@v0.4.0` is published.
+- `authn-sh/sdk-php` constraint tightened to `^0.4` (was `dev-main || ^0.4`). Drops the dev-only VCS repository entry + `minimum-stability: dev` workaround that bridged the v0.4 alpha cycle.
 
 ## [0.3.0] — 2026-05-10
 
