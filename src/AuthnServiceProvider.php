@@ -8,7 +8,9 @@ use Authn\Sdk\Client;
 use Authn\Sdk\Laravel\Http\Middleware\AuthenticateWithAuthn;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresConnectedAccount;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresMfa;
+use Authn\Sdk\Laravel\Http\Middleware\RequiresPasskey;
 use Authn\Sdk\Laravel\Support\ConnectedAccounts;
+use Authn\Sdk\Laravel\Support\Passkeys;
 use Authn\Sdk\Tokens\TokenVerifier;
 use Authn\Sdk\Tokens\VerifiedClaims;
 use Authn\Sdk\Webhooks\SignatureVerifier;
@@ -60,6 +62,7 @@ class AuthnServiceProvider extends ServiceProvider
         $router->aliasMiddleware('authn', AuthenticateWithAuthn::class);
         $router->aliasMiddleware('authn.requires_mfa', RequiresMfa::class);
         $router->aliasMiddleware('authn.connected', RequiresConnectedAccount::class);
+        $router->aliasMiddleware('authn.requires_passkey', RequiresPasskey::class);
     }
 
     private function registerBladeDirectives(): void
@@ -72,6 +75,14 @@ class AuthnServiceProvider extends ServiceProvider
         Blade::if(
             'authnHasConnectedAccount',
             fn (string $providerKey): bool => ConnectedAccounts::has(self::currentClaims(), $providerKey),
+        );
+
+        Blade::if(
+            'authnHasPasskey',
+            fn (?string $mode = null): bool => Passkeys::matches(
+                self::currentClaims(),
+                $mode ?? self::configuredPasskeyMode(),
+            ),
         );
 
         Blade::if('authnHas', function (string $check): bool {
@@ -87,6 +98,16 @@ class AuthnServiceProvider extends ServiceProvider
                 "authnHas: unrecognised check \"{$check}\" — prefix with \"role:\" or \"permission:\".",
             );
         });
+    }
+
+    private static function configuredPasskeyMode(): string
+    {
+        $configured = config('authn.passkey.default_strict_mode');
+        if (is_string($configured) && in_array($configured, [Passkeys::MODE_VERIFIED, Passkeys::MODE_ENROLLED], true)) {
+            return $configured;
+        }
+
+        return Passkeys::MODE_VERIFIED;
     }
 
     private static function currentClaims(): ?VerifiedClaims

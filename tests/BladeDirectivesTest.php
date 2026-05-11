@@ -53,6 +53,22 @@ NO_GOOGLE
 @endauthnHasConnectedAccount
 BLADE;
 
+    private const PASSKEY_DEFAULT_TEMPLATE = <<<'BLADE'
+@authnHasPasskey
+HAS_PASSKEY
+@else
+NO_PASSKEY
+@endauthnHasPasskey
+BLADE;
+
+    private const PASSKEY_ENROLLED_TEMPLATE = <<<'BLADE'
+@authnHasPasskey('enrolled')
+HAS_PASSKEY
+@else
+NO_PASSKEY
+@endauthnHasPasskey
+BLADE;
+
     private AuthnTestEnvironment $env;
 
     protected function setUp(): void
@@ -92,6 +108,18 @@ BLADE;
         );
 
         Route::get('/render-connected-anonymous', fn () => Blade::render(self::CONNECTED_TEMPLATE));
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-passkey',
+            fn () => Blade::render(self::PASSKEY_DEFAULT_TEMPLATE),
+        );
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-passkey-enrolled',
+            fn () => Blade::render(self::PASSKEY_ENROLLED_TEMPLATE),
+        );
+
+        Route::get('/render-passkey-anonymous', fn () => Blade::render(self::PASSKEY_DEFAULT_TEMPLATE));
     }
 
     public function test_renders_the_signed_in_branch_when_middleware_has_populated_claims(): void
@@ -260,5 +288,53 @@ BLADE;
 
         $this->assertStringContainsString('NO_GOOGLE', (string) $body);
         $this->assertStringNotContainsString('HAS_GOOGLE', (string) $body);
+    }
+
+    public function test_authn_has_passkey_default_renders_truthy_branch_when_session_is_passkey_verified(): void
+    {
+        $jwt = $this->env->signJwt(['pkv' => true, 'pkc' => 1]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-passkey')->getContent();
+
+        $this->assertStringContainsString('HAS_PASSKEY', (string) $body);
+        $this->assertStringNotContainsString('NO_PASSKEY', (string) $body);
+    }
+
+    public function test_authn_has_passkey_default_renders_else_branch_when_user_has_passkey_but_session_is_password_only(): void
+    {
+        $jwt = $this->env->signJwt(['pkv' => false, 'pkc' => 3]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-passkey')->getContent();
+
+        $this->assertStringContainsString('NO_PASSKEY', (string) $body);
+        $this->assertStringNotContainsString('HAS_PASSKEY', (string) $body);
+    }
+
+    public function test_authn_has_passkey_enrolled_renders_truthy_branch_when_user_has_any_passkey(): void
+    {
+        $jwt = $this->env->signJwt(['pkv' => false, 'pkc' => 1]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-passkey-enrolled')->getContent();
+
+        $this->assertStringContainsString('HAS_PASSKEY', (string) $body);
+        $this->assertStringNotContainsString('NO_PASSKEY', (string) $body);
+    }
+
+    public function test_authn_has_passkey_enrolled_renders_else_branch_when_passkey_count_is_zero(): void
+    {
+        $jwt = $this->env->signJwt(['pkv' => false, 'pkc' => 0]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-passkey-enrolled')->getContent();
+
+        $this->assertStringContainsString('NO_PASSKEY', (string) $body);
+        $this->assertStringNotContainsString('HAS_PASSKEY', (string) $body);
+    }
+
+    public function test_authn_has_passkey_renders_else_branch_on_anonymous_request(): void
+    {
+        $body = $this->get('/render-passkey-anonymous')->getContent();
+
+        $this->assertStringContainsString('NO_PASSKEY', (string) $body);
+        $this->assertStringNotContainsString('HAS_PASSKEY', (string) $body);
     }
 }

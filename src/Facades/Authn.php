@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Authn\Sdk\Resources\WebhookEndpointsManager webhookEndpoints()
  * @method static bool hasRole(string $key)
  * @method static bool hasPermission(string $key)
+ * @method static bool hasPasskey(?string $mode = null)
  * @method static void resolveUserUsing(?callable $resolver)
  *
  * @see AuthnManager
