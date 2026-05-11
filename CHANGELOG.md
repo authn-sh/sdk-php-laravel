@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.5.0] — 2026-05-11
 
 ### Added
 
@@ -10,6 +10,10 @@
 - `Authn::hasPasskey(?string $mode = null)` facade helper. Honours the configured default strict mode when no argument is supplied.
 - `authn.passkey.enroll_url` config key (env: `AUTHN_PASSKEY_ENROLL_URL`, default `/user/security/passkeys`).
 - `authn.passkey.default_strict_mode` config key (env: `AUTHN_PASSKEY_DEFAULT_STRICT_MODE`, default `verified`).
+
+### Changed
+
+- Composer constraint on `authn-sh/sdk-php` tightened to `^0.5` (was `dev-main || ^0.4`). Drops the dev-only VCS repository entry, the `minimum-stability: dev` workaround, and the matching "Pin authn-sh/sdk-php to dev-main" CI step — all of which bridged the v0.5 alpha cycle. `sdk-php@v0.5.0` is now on Packagist.
 
 ## [0.4.0] — 2026-05-11
 
