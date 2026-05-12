@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `@authnHasAuthorizedApp('<oauth_application_id>')` Blade directive. Renders the inner block when the active session has an active `AuthorizationGrant` for the supplied `OauthApplication.id` (the row id `oac_*`, not the public `oac_pub_*` client id). Useful for gating dashboards or routes by per-app consent state.
+- `Authn::hasAuthorizedApp(string $appId)` facade helper exposed by `AuthnManager::hasAuthorizedApp()`.
+- `Authn\Sdk\Laravel\Support\AuthorizedApps` helper exposing `has(?VerifiedClaims, string $appId): bool` and `granted(?VerifiedClaims): list<string>`. Reads the `authorized_apps[]` claim through `VerifiedClaims->customClaim('authorized_apps')` and tolerates non-string entries by filtering them out.
+
+### Notes
+
+- v0.7 ships forward-compat: the server does not yet emit the `authorized_apps[]` claim on session JWTs, so the directive and helper resolve to `false` for every grant in v0.7. The API surface is stable across the transition — once the claim emission lands, existing templates start gating correctly without consumer changes. Tracked in a v0.8 follow-up against `authn-sh/authn`.
+
+### Changed
+
+- Composer constraint on `authn-sh/sdk-php` widened to `dev-main || ^0.6` so CI can resolve against sdk-php main during the v0.7 alpha cycle. The VCS repository entry, `minimum-stability: dev`, and the "Pin authn-sh/sdk-php to dev-main (v0.7 integration)" CI step are restored. All three are torn down again when the release dance cuts v0.7.0.
+
 ## [0.6.0] — 2026-05-12
 
 ### Added

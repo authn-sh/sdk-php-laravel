@@ -10,6 +10,7 @@ use Authn\Sdk\Laravel\Http\Middleware\RequiresConnectedAccount;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresEnterpriseSso;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresMfa;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresPasskey;
+use Authn\Sdk\Laravel\Support\AuthorizedApps;
 use Authn\Sdk\Laravel\Support\ConnectedAccounts;
 use Authn\Sdk\Laravel\Support\EnterpriseAccounts;
 use Authn\Sdk\Laravel\Support\Passkeys;
@@ -98,6 +99,11 @@ class AuthnServiceProvider extends ServiceProvider
 
                 return EnterpriseAccounts::matches($claims, self::configuredEnterpriseSsoMode());
             },
+        );
+
+        Blade::if(
+            'authnHasAuthorizedApp',
+            fn (string $appId): bool => AuthorizedApps::has(self::currentClaims(), $appId),
         );
 
         Blade::if('authnHas', function (string $check): bool {
