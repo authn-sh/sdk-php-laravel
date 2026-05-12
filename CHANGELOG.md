@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `@authnHasEnterpriseAccount[(<connection_id>)]` Blade directive. Renders the inner block based on the active session's enterprise-SSO signal. With no argument, applies the configured default strict mode (`verified` — current session was minted through an enterprise IdP; or `linked` — user has at least one linked `EnterpriseAccount`). With a connection-id argument, matches when the current session's `entcon` equals it OR the user has a linked `EnterpriseAccount` for that connection.
+- `Authn\Sdk\Laravel\Http\Middleware\RequiresEnterpriseSso` route middleware. Aliased as `authn.requires_enterprise_sso[:<mode>]`. Fail-closes by redirecting to `authn.url.sign_in` for unauthenticated requests and to `authn.enterprise_sso.redirect_url` for authenticated requests lacking the required enterprise-SSO signal.
+- `Authn\Sdk\Laravel\Support\EnterpriseAccounts` helper exposing `matches(?VerifiedClaims, string $mode): bool`, `hasConnection(?VerifiedClaims, $connectionId): bool`, `connectionIds(?VerifiedClaims): list<string>` and the `MODE_VERIFIED` / `MODE_LINKED` constants. Reads enterprise-account snapshots from the JWT raw claim bag (`enterprise_accounts[]` or `eac[]`, both objects with `enterprise_connection_id` and bare strings accepted).
+- `Authn::hasEnterpriseSso(?string $mode = null)` facade helper. Honours the configured default strict mode when no argument is supplied.
+- `authn.enterprise_sso.redirect_url` config key (env: `AUTHN_ENTERPRISE_SSO_REDIRECT_URL`, default `/sign-in/enterprise-sso`).
+- `authn.enterprise_sso.default_strict_mode` config key (env: `AUTHN_ENTERPRISE_SSO_DEFAULT_STRICT_MODE`, default `verified`).
+
+### Changed
+
+- Composer constraint on `authn-sh/sdk-php` widened to `dev-main || ^0.5` so CI can resolve against sdk-php main during the v0.6 alpha cycle. The VCS repository entry, `minimum-stability: dev`, the "Pin authn-sh/sdk-php to dev-main (v0.6 integration)" CI step, and the `0.6.x-dev` branch alias are restored. All four are torn down again when the release dance cuts v0.6.0.
+
 ## [0.5.0] — 2026-05-11
 
 ### Added

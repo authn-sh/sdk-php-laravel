@@ -69,6 +69,22 @@ NO_PASSKEY
 @endauthnHasPasskey
 BLADE;
 
+    private const ENTERPRISE_DEFAULT_TEMPLATE = <<<'BLADE'
+@authnHasEnterpriseAccount
+HAS_ENTERPRISE
+@else
+NO_ENTERPRISE
+@endauthnHasEnterpriseAccount
+BLADE;
+
+    private const ENTERPRISE_CONNECTION_TEMPLATE = <<<'BLADE'
+@authnHasEnterpriseAccount('entcon_01HKX9SY9V7H7TF8C8K7J9X4ZA')
+HAS_ENTERPRISE
+@else
+NO_ENTERPRISE
+@endauthnHasEnterpriseAccount
+BLADE;
+
     private AuthnTestEnvironment $env;
 
     protected function setUp(): void
@@ -120,6 +136,18 @@ BLADE;
         );
 
         Route::get('/render-passkey-anonymous', fn () => Blade::render(self::PASSKEY_DEFAULT_TEMPLATE));
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-enterprise',
+            fn () => Blade::render(self::ENTERPRISE_DEFAULT_TEMPLATE),
+        );
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-enterprise-connection',
+            fn () => Blade::render(self::ENTERPRISE_CONNECTION_TEMPLATE),
+        );
+
+        Route::get('/render-enterprise-anonymous', fn () => Blade::render(self::ENTERPRISE_DEFAULT_TEMPLATE));
     }
 
     public function test_renders_the_signed_in_branch_when_middleware_has_populated_claims(): void
@@ -336,5 +364,72 @@ BLADE;
 
         $this->assertStringContainsString('NO_PASSKEY', (string) $body);
         $this->assertStringNotContainsString('HAS_PASSKEY', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_default_renders_truthy_branch_when_session_carries_entcon(): void
+    {
+        $jwt = $this->env->signJwt(['entcon' => 'entcon_01HKX9SY9V7H7TF8C8K7J9X4ZA']);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-enterprise')->getContent();
+
+        $this->assertStringContainsString('HAS_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('NO_ENTERPRISE', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_default_renders_else_branch_when_session_is_password_only(): void
+    {
+        $jwt = $this->env->signJwt();
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-enterprise')->getContent();
+
+        $this->assertStringContainsString('NO_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('HAS_ENTERPRISE', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_with_arg_matches_current_sessions_entcon(): void
+    {
+        $jwt = $this->env->signJwt(['entcon' => 'entcon_01HKX9SY9V7H7TF8C8K7J9X4ZA']);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-enterprise-connection')->getContent();
+
+        $this->assertStringContainsString('HAS_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('NO_ENTERPRISE', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_with_arg_matches_linked_account_for_that_connection(): void
+    {
+        $jwt = $this->env->signJwt([
+            'enterprise_accounts' => [
+                ['enterprise_connection_id' => 'entcon_01HKX9SY9V7H7TF8C8K7J9X4ZA'],
+            ],
+        ]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-enterprise-connection')->getContent();
+
+        $this->assertStringContainsString('HAS_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('NO_ENTERPRISE', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_with_arg_renders_else_branch_for_other_connection(): void
+    {
+        $jwt = $this->env->signJwt([
+            'entcon' => 'entcon_01HKX9SY9V7H7TF8C8K7J9X4ZZ',
+            'enterprise_accounts' => [
+                ['enterprise_connection_id' => 'entcon_01HKX9SY9V7H7TF8C8K7J9X4ZZ'],
+            ],
+        ]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-enterprise-connection')->getContent();
+
+        $this->assertStringContainsString('NO_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('HAS_ENTERPRISE', (string) $body);
+    }
+
+    public function test_authn_has_enterprise_account_renders_else_branch_on_anonymous_request(): void
+    {
+        $body = $this->get('/render-enterprise-anonymous')->getContent();
+
+        $this->assertStringContainsString('NO_ENTERPRISE', (string) $body);
+        $this->assertStringNotContainsString('HAS_ENTERPRISE', (string) $body);
     }
 }

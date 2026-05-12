@@ -56,6 +56,13 @@ jobs:
           composer require --no-update --no-interaction --dev \
             "orchestra/testbench:${{ matrix.testbench }}"
 
+      # v0.6 integration: pin sdk-php to dev-main while sdk-php@v0.6.0
+      # is not yet on Packagist. The composer.json constraint stays
+      # `"dev-main || ^0.5"`; this step forces resolution to dev-main
+      # so prefer-stable can't pick the older v0.5.x release.
+      - name: Pin authn-sh/sdk-php to dev-main (v0.6 integration)
+        run: composer require --no-update --no-interaction "authn-sh/sdk-php:dev-main"
+
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
 

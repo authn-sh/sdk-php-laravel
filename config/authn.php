@@ -142,4 +142,29 @@ return [
         'default_strict_mode' => env('AUTHN_PASSKEY_DEFAULT_STRICT_MODE', 'verified'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Enterprise SSO enforcement
+    |--------------------------------------------------------------------------
+    |
+    | `redirect_url` is where `RequiresEnterpriseSso` sends a signed-in user
+    | whose session lacks the required enterprise-SSO signal. `default_strict_mode`
+    | picks which check the middleware (and the `@authnHasEnterpriseAccount`
+    | Blade directive's no-arg form) apply when no per-call argument is
+    | supplied. Two modes:
+    |
+    |   - `verified` — only matches when the current session was actually
+    |     authenticated through an enterprise IdP (`entcon` claim present on
+    |     the JWT, surfaced as `VerifiedClaims->enterpriseConnectionId`).
+    |   - `linked` — matches whenever the user has at least one
+    |     `EnterpriseAccount` linked (current session counts, plus any rows
+    |     surfaced via the JWT's `enterprise_accounts[]` snapshot).
+    |
+    */
+
+    'enterprise_sso' => [
+        'redirect_url' => env('AUTHN_ENTERPRISE_SSO_REDIRECT_URL', '/sign-in/enterprise-sso'),
+        'default_strict_mode' => env('AUTHN_ENTERPRISE_SSO_DEFAULT_STRICT_MODE', 'verified'),
+    ],
+
 ];
