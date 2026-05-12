@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Authn\Sdk\Laravel;
 
 use Authn\Sdk\Client;
+use Authn\Sdk\Laravel\Support\AuthorizedApps;
 use Authn\Sdk\Laravel\Support\EnterpriseAccounts;
 use Authn\Sdk\Laravel\Support\Passkeys;
 use Authn\Sdk\Resources\AllowlistIdentifiersManager;
@@ -125,6 +126,18 @@ class AuthnManager
         $resolved = $mode ?? $this->configuredEnterpriseSsoMode();
 
         return EnterpriseAccounts::matches($this->auth(), $resolved);
+    }
+
+    /**
+     * True iff the active session has an active `AuthorizationGrant` for the
+     * supplied `OauthApplication.id`. v0.7 ships forward-compat — the server
+     * does not yet emit the `authorized_apps[]` claim on session JWTs, so this
+     * resolves to `false` for every grant in v0.7. Becomes functional in a
+     * later release without consumer changes.
+     */
+    public function hasAuthorizedApp(string $appId): bool
+    {
+        return AuthorizedApps::has($this->auth(), $appId);
     }
 
     private function configuredPasskeyMode(): string

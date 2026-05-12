@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool hasPermission(string $key)
  * @method static bool hasPasskey(?string $mode = null)
  * @method static bool hasEnterpriseSso(?string $mode = null)
+ * @method static bool hasAuthorizedApp(string $appId)
  * @method static void resolveUserUsing(?callable $resolver)
  *
  * @see AuthnManager
