@@ -7,9 +7,11 @@ namespace Authn\Sdk\Laravel;
 use Authn\Sdk\Client;
 use Authn\Sdk\Laravel\Http\Middleware\AuthenticateWithAuthn;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresConnectedAccount;
+use Authn\Sdk\Laravel\Http\Middleware\RequiresEnterpriseSso;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresMfa;
 use Authn\Sdk\Laravel\Http\Middleware\RequiresPasskey;
 use Authn\Sdk\Laravel\Support\ConnectedAccounts;
+use Authn\Sdk\Laravel\Support\EnterpriseAccounts;
 use Authn\Sdk\Laravel\Support\Passkeys;
 use Authn\Sdk\Tokens\TokenVerifier;
 use Authn\Sdk\Tokens\VerifiedClaims;
@@ -63,6 +65,7 @@ class AuthnServiceProvider extends ServiceProvider
         $router->aliasMiddleware('authn.requires_mfa', RequiresMfa::class);
         $router->aliasMiddleware('authn.connected', RequiresConnectedAccount::class);
         $router->aliasMiddleware('authn.requires_passkey', RequiresPasskey::class);
+        $router->aliasMiddleware('authn.requires_enterprise_sso', RequiresEnterpriseSso::class);
     }
 
     private function registerBladeDirectives(): void
@@ -83,6 +86,18 @@ class AuthnServiceProvider extends ServiceProvider
                 self::currentClaims(),
                 $mode ?? self::configuredPasskeyMode(),
             ),
+        );
+
+        Blade::if(
+            'authnHasEnterpriseAccount',
+            function (?string $connectionId = null): bool {
+                $claims = self::currentClaims();
+                if ($connectionId !== null && $connectionId !== '') {
+                    return EnterpriseAccounts::hasConnection($claims, $connectionId);
+                }
+
+                return EnterpriseAccounts::matches($claims, self::configuredEnterpriseSsoMode());
+            },
         );
 
         Blade::if('authnHas', function (string $check): bool {
@@ -108,6 +123,16 @@ class AuthnServiceProvider extends ServiceProvider
         }
 
         return Passkeys::MODE_VERIFIED;
+    }
+
+    private static function configuredEnterpriseSsoMode(): string
+    {
+        $configured = config('authn.enterprise_sso.default_strict_mode');
+        if (is_string($configured) && in_array($configured, [EnterpriseAccounts::MODE_VERIFIED, EnterpriseAccounts::MODE_LINKED], true)) {
+            return $configured;
+        }
+
+        return EnterpriseAccounts::MODE_VERIFIED;
     }
 
     private static function currentClaims(): ?VerifiedClaims

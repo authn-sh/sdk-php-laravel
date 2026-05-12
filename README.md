@@ -117,6 +117,44 @@ Route::get('/account/passkey-required-area', [Controller::class, 'show'])
 
 The default mode is configurable via `authn.passkey.default_strict_mode` (env `AUTHN_PASSKEY_DEFAULT_STRICT_MODE`).
 
+### `@authnHasEnterpriseAccount`
+
+Renders the inner block based on the active session's enterprise-SSO signal. Two modes for the no-argument form:
+
+- `verified` (default) — matches when the current session was authenticated through an enterprise IdP (`VerifiedClaims->enterpriseConnectionId !== null`).
+- `linked` — matches whenever the user has at least one linked `EnterpriseAccount`, whether or not the current session is enterprise-SSO.
+
+```blade
+@authnHasEnterpriseAccount
+    <p>You signed in via enterprise SSO.</p>
+@else
+    <a href="/sign-in/enterprise-sso">Sign in with your organization</a>
+@endauthnHasEnterpriseAccount
+```
+
+With a connection-id argument, the directive matches when the active session's `enterpriseConnectionId` equals it OR when the user has a linked `EnterpriseAccount` for that connection:
+
+```blade
+@authnHasEnterpriseAccount('entcon_01HKX9SY9V7H7TF8C8K7J9X4ZA')
+    <a href="/admin/enterprise">Org admin</a>
+@endauthnHasEnterpriseAccount
+```
+
+The matching route middleware `authn.requires_enterprise_sso[:<mode>]` fail-closes by redirecting unauthenticated requests to `authn.url.sign_in` and signed-in-but-under-authenticated requests to `authn.enterprise_sso.redirect_url`:
+
+```php
+Route::get('/workspace', [WorkspaceController::class, 'show'])
+    ->middleware(['authn', 'authn.requires_enterprise_sso']);            // verified (default)
+
+Route::get('/workspace/admin', [WorkspaceAdminController::class, 'show'])
+    ->middleware(['authn', 'authn.requires_enterprise_sso:verified']);
+
+Route::get('/workspace/profile', [ProfileController::class, 'show'])
+    ->middleware(['authn', 'authn.requires_enterprise_sso:linked']);
+```
+
+The default mode is configurable via `authn.enterprise_sso.default_strict_mode` (env `AUTHN_ENTERPRISE_SSO_DEFAULT_STRICT_MODE`).
+
 ## Facade methods
 
 ```php
@@ -127,6 +165,8 @@ Authn::hasRole('org:admin');          // bool
 Authn::hasPermission('org:foo:bar');  // bool
 Authn::hasPasskey();                  // bool — defaults to the configured strict mode ("verified")
 Authn::hasPasskey('enrolled');        // bool — true when the user has any verified passkey
+Authn::hasEnterpriseSso();            // bool — defaults to the configured strict mode ("verified")
+Authn::hasEnterpriseSso('linked');    // bool — true when the user has any linked EnterpriseAccount
 ```
 
 ## Development

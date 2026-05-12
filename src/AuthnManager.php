@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Authn\Sdk\Laravel;
 
 use Authn\Sdk\Client;
+use Authn\Sdk\Laravel\Support\EnterpriseAccounts;
 use Authn\Sdk\Laravel\Support\Passkeys;
 use Authn\Sdk\Resources\AllowlistIdentifiersManager;
 use Authn\Sdk\Resources\BlocklistIdentifiersManager;
@@ -119,6 +120,13 @@ class AuthnManager
         return Passkeys::matches($this->auth(), $resolved);
     }
 
+    public function hasEnterpriseSso(?string $mode = null): bool
+    {
+        $resolved = $mode ?? $this->configuredEnterpriseSsoMode();
+
+        return EnterpriseAccounts::matches($this->auth(), $resolved);
+    }
+
     private function configuredPasskeyMode(): string
     {
         if (! $this->container->bound('config')) {
@@ -131,6 +139,20 @@ class AuthnManager
         }
 
         return Passkeys::MODE_VERIFIED;
+    }
+
+    private function configuredEnterpriseSsoMode(): string
+    {
+        if (! $this->container->bound('config')) {
+            return EnterpriseAccounts::MODE_VERIFIED;
+        }
+
+        $configured = $this->container->make('config')->get('authn.enterprise_sso.default_strict_mode');
+        if (is_string($configured) && in_array($configured, [EnterpriseAccounts::MODE_VERIFIED, EnterpriseAccounts::MODE_LINKED], true)) {
+            return $configured;
+        }
+
+        return EnterpriseAccounts::MODE_VERIFIED;
     }
 
     public function users(): UsersManager
