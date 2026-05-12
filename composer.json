@@ -18,17 +18,11 @@
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "authn-sh/sdk-php": "dev-main || ^0.6",
+        "authn-sh/sdk-php": "^0.7",
         "illuminate/cache": "^11.0 || ^12.0",
         "illuminate/contracts": "^11.0 || ^12.0",
         "illuminate/support": "^11.0 || ^12.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/authn-sh/sdk-php"
-        }
-    ],
     "require-dev": {
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.10",
@@ -71,9 +65,9 @@
             }
         },
         "branch-alias": {
-            "dev-main": "0.6.x-dev"
+            "dev-main": "0.7.x-dev"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

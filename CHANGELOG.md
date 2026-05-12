@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.7.0] — 2026-05-12
 
 ### Added
 
@@ -14,7 +14,7 @@
 
 ### Changed
 
-- Composer constraint on `authn-sh/sdk-php` widened to `dev-main || ^0.6` so CI can resolve against sdk-php main during the v0.7 alpha cycle. The VCS repository entry, `minimum-stability: dev`, and the "Pin authn-sh/sdk-php to dev-main (v0.7 integration)" CI step are restored. All three are torn down again when the release dance cuts v0.7.0.
+- Composer constraint on `authn-sh/sdk-php` tightened to `^0.7` (was `dev-main || ^0.6`). Drops the dev-only VCS repository entry, the `minimum-stability: dev` workaround, and the matching "Pin authn-sh/sdk-php to dev-main" CI step — all of which bridged the v0.7 alpha cycle. `sdk-php@v0.7.0` is now on Packagist.
 
 ## [0.6.0] — 2026-05-12
 
