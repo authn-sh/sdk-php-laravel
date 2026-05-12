@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.6.0] — 2026-05-12
 
 ### Added
 
@@ -10,6 +10,10 @@
 - `Authn::hasEnterpriseSso(?string $mode = null)` facade helper. Honours the configured default strict mode when no argument is supplied.
 - `authn.enterprise_sso.redirect_url` config key (env: `AUTHN_ENTERPRISE_SSO_REDIRECT_URL`, default `/sign-in/enterprise-sso`).
 - `authn.enterprise_sso.default_strict_mode` config key (env: `AUTHN_ENTERPRISE_SSO_DEFAULT_STRICT_MODE`, default `verified`).
+
+### Changed
+
+- Composer constraint on `authn-sh/sdk-php` tightened to `^0.6` (was `dev-main || ^0.5`). Drops the dev-only VCS repository entry, the `minimum-stability: dev` workaround, and the matching "Pin authn-sh/sdk-php to dev-main" CI step — all of which bridged the v0.6 alpha cycle. `sdk-php@v0.6.0` is now on Packagist.
 
 ### Changed
 
