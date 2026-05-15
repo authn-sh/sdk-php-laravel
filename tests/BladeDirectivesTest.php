@@ -45,6 +45,14 @@ MFA_NOT_VERIFIED
 @endauthnRequiresMfa
 BLADE;
 
+    private const MFA_TIGHT_WINDOW_TEMPLATE = <<<'BLADE'
+@authnRequiresMfa(300)
+MFA_VERIFIED
+@else
+MFA_NOT_VERIFIED
+@endauthnRequiresMfa
+BLADE;
+
     private const CONNECTED_TEMPLATE = <<<'BLADE'
 @authnHasConnectedAccount('google')
 HAS_GOOGLE
@@ -117,6 +125,11 @@ BLADE;
         );
 
         Route::get('/render-mfa-anonymous', fn () => Blade::render(self::MFA_TEMPLATE));
+
+        Route::middleware(AuthenticateWithAuthn::class)->get(
+            '/render-mfa-tight',
+            fn () => Blade::render(self::MFA_TIGHT_WINDOW_TEMPLATE),
+        );
 
         Route::middleware(AuthenticateWithAuthn::class)->get(
             '/render-connected',
@@ -267,6 +280,38 @@ BLADE;
     public function test_authn_requires_mfa_renders_else_branch_on_anonymous_request(): void
     {
         $body = $this->get('/render-mfa-anonymous')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_renders_else_branch_when_second_factor_age_exceeds_default_max_age(): void
+    {
+        $jwt = $this->env->signJwt(['fva' => [60, 3600]]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_honours_configured_max_age_seconds(): void
+    {
+        config(['authn.mfa.max_age_seconds' => 60]);
+
+        $jwt = $this->env->signJwt(['fva' => [10, 120]]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa')->getContent();
+
+        $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
+        $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
+    }
+
+    public function test_authn_requires_mfa_argument_overrides_configured_max_age(): void
+    {
+        $jwt = $this->env->signJwt(['fva' => [10, 500]]);
+
+        $body = $this->withHeader('Authorization', "Bearer {$jwt}")->get('/render-mfa-tight')->getContent();
 
         $this->assertStringContainsString('MFA_NOT_VERIFIED', (string) $body);
         $this->assertStringNotContainsString('MFA_VERIFIED', (string) $body);
