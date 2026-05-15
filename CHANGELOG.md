@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.1] — 2026-05-15
+
+Patch release: `@authnRequiresMfa` freshness fail-open fix.
+
+### Fixed
+
+- **`@authnRequiresMfa` now enforces `authn.mfa.max_age_seconds` (SPL-2)** — the directive previously checked only the boolean `twoFactorVerified` claim, while the matching `RequiresMfa` route middleware *also* enforces the freshness window (default 1800 s) against `secondFactorAgeSeconds`. Templates rendered the gated branch for stale-but-verified second factors, leaking sensitive UI for up to ~30 min after the route-level middleware would have already redirected to factor-two. The directive now mirrors the middleware exactly: returns `false` unless `secondFactorAgeSeconds` is non-null AND ≤ the configured max age.
+
+### Added
+
+- **`@authnRequiresMfa(<seconds>)` argument override** — optional template-level override mirroring the `authn.requires_mfa:<seconds>` middleware alias, so a template can tighten the window without depending on the route middleware's argument.
+
 ## [0.7.0] — 2026-05-12
 
 ### Added
