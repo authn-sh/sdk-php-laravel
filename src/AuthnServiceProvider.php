@@ -74,7 +74,24 @@ class AuthnServiceProvider extends ServiceProvider
         Blade::if('authnSignedIn', fn (): bool => self::currentClaims() !== null);
         Blade::if('authnSignedOut', fn (): bool => self::currentClaims() === null);
 
-        Blade::if('authnRequiresMfa', fn (): bool => self::currentClaims()?->twoFactorVerified === true);
+        Blade::if(
+            'authnRequiresMfa',
+            function (?int $maxAgeOverride = null): bool {
+                $claims = self::currentClaims();
+                if ($claims === null || $claims->twoFactorVerified !== true) {
+                    return false;
+                }
+                if ($maxAgeOverride !== null) {
+                    $maxAge = $maxAgeOverride;
+                } else {
+                    $configured = config('authn.mfa.max_age_seconds');
+                    $maxAge = is_int($configured) ? $configured : 1800;
+                }
+                $age = $claims->secondFactorAgeSeconds;
+
+                return $age !== null && $age <= $maxAge;
+            },
+        );
 
         Blade::if(
             'authnHasConnectedAccount',
